@@ -1,0 +1,26 @@
+{
+  "name": "koa-server",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "server": "node app.js",
+    "nodemon": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "dotenv": "^16.4.5",
+    "koa": "^2.15.3",
+    "koa-bodyparser": "3",
+    "koa-convert": "^2.0.0",
+    "koa-router": "^12.0.1",
+    "koa-static": "^5.0.0",
+    "koa2-cors": "^2.0.6",
+    "mysql2": "^3.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
