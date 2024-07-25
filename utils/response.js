@@ -42,7 +42,7 @@ class ServiceError extends Error {
  * 未知错误
  */
 class UnknownError extends ServiceError {
-    constructor(message) {
+    constructor(message = "服务器错误") {
         super(message, 500);
     }
 }
@@ -51,7 +51,7 @@ class UnknownError extends ServiceError {
  * 文件上传错误
  */
 class UploadError extends ServiceError {
-    constructor(message) {
+    constructor(message = "文件上传错误") {
         super(message, 413);
     }
 }
@@ -60,7 +60,7 @@ class UploadError extends ServiceError {
  * 禁止访问错误
  */
 class ForbiddenError extends ServiceError {
-    constructor(message) {
+    constructor(message = "无权限访问，请重新登录") {
         super(message, 401);
     }
 }
@@ -69,7 +69,7 @@ class ForbiddenError extends ServiceError {
  * 验证错误
  */
 class ValidationError extends ServiceError {
-    constructor(message) {
+    constructor(message = "验证错误") {
         super(message, 406);
     }
 }
@@ -78,8 +78,20 @@ class ValidationError extends ServiceError {
  * 无资源错误
  */
 class NotFoundError extends ServiceError {
-    constructor(message) {
+    constructor(message = "无资源错误") {
         super(message, 404);
+    }
+}
+
+/**
+ * 格式化分页数据
+ */
+function formatPageResponse(list, total, page, pageSize) {
+    return {
+        list,
+        total,
+        page,
+        pageSize
     }
 }
 
@@ -90,4 +102,5 @@ module.exports = {
     ForbiddenError,
     ValidationError,
     NotFoundError,
+    formatPageResponse,
 }

@@ -1,9 +1,27 @@
 const homeService = require("../services/homeService");
 const {successResponse} = require("../utils/response");
 const home = {
-    async carouselPage(ctx) {
-        const result = await homeService.getCarouselList();
-        ctx.body = successResponse(result, "查询成功");
+    async getSlides(ctx) {
+        const result = await homeService.getSlidesList();
+        ctx.body = successResponse(result);
+    },
+    async getNav(ctx) {
+        const result = await homeService.getNavList();
+        ctx.body = successResponse(result);
+    },
+    async getGoods(ctx) {
+        const result = await homeService.getGoodsList();
+        ctx.body = successResponse(result);
+    },
+    async getCategory(ctx) {
+        const result = await homeService.getGoodsCategoryList();
+        ctx.body = successResponse(result);
+    },
+    async getRecommend(ctx) {
+        const { page = 1, pageSize = 10, isPage = 1 } = ctx.request.query;
+        console.log(ctx.request.query)
+        const result = await homeService.getRecommendList({page, pageSize, isPage});
+        ctx.body = successResponse(result);
     }
 }
 
