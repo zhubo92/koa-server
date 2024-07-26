@@ -6,8 +6,7 @@ const koaStatic = require("koa-static");
 const cors = require('koa2-cors');
 const KoaLogger = require("koa-logger");
 const log4js = require('log4js');
-require('dotenv').config();
-
+const dotenv = require('dotenv').config();
 const router = require("./routes/index");
 const {UnknownError, ForbiddenError} = require("./utils/response");
 const { isProd } = require('./utils/index');
@@ -59,17 +58,6 @@ app.use(bodyParser({
     multipart: true,
 }));
 
-// 401
-app.use((ctx, next) => {
-    return next().catch((err) => {
-        if (err.status == 401) {
-            ctx.body = new ForbiddenError().toResponseJSON();
-        } else {
-            throw err;
-        }
-    });
-});
-
 // 应用 token 校验中间件
 app.use(tokenMiddleware);
 
@@ -78,7 +66,7 @@ app.use(router.routes()).use(router.allowedMethods());
 
 // 全局监听异常信息
 app.on('error', err => {
-    console.error('server error', err)
+    console.error('server error:', err)
 });
 
 // 启动服务器

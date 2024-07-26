@@ -1,7 +1,4 @@
 const userDao = require("../dao/userDao");
-const Redis = require('ioredis');
-
-const redis = new Redis();
 
 const userService = {
     async registerUserByPhone(phone) {
@@ -10,7 +7,7 @@ const userService = {
     async getUserInfoByPhone(phone) {
         const result = await userDao.queryUserInfoDataByPhone(phone);
 
-        if(result.length > 0) {
+        if (result.length > 0) {
             return result[0];
         }
 
@@ -18,7 +15,7 @@ const userService = {
 
         const newResult = await userDao.queryUserInfoDataByPhone(phone);
 
-        if(newResult.length > 0) {
+        if (newResult.length > 0) {
             return newResult[0];
         }
 
@@ -27,7 +24,7 @@ const userService = {
     async getUserInfoByAccountAndPassword(account, password) {
         const result = await userDao.queryUserInfoDataByAccount(account);
 
-        if(result.length === 0 || result[0].user_pwd !== password) {
+        if (result.length === 0 || result[0].user_pwd !== password) {
             return null;
         }
 

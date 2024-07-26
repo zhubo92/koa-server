@@ -1,5 +1,6 @@
 const homeService = require("../services/homeService");
 const {successResponse} = require("../utils/response");
+
 const home = {
     async getSlides(ctx) {
         const result = await homeService.getSlidesList();
@@ -18,8 +19,7 @@ const home = {
         ctx.body = successResponse(result);
     },
     async getRecommend(ctx) {
-        const { page = 1, pageSize = 10, isPage = 1 } = ctx.request.query;
-        console.log(ctx.request.query)
+        const {page = 1, pageSize = 10, isPage = 1} = ctx.request.query;
         const result = await homeService.getRecommendList({page, pageSize, isPage});
         ctx.body = successResponse(result);
     }

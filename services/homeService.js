@@ -29,7 +29,7 @@ const homeService = {
     async getRecommendList({page, pageSize, isPage}) {
         const data = await homeDao.queryRecommendData(page, pageSize);
 
-        if(isPage === isPageEnum.PAGINATION) {
+        if (isPage === isPageEnum.PAGINATION) {
             const list = await homeDao.queryRecommendDataByPage(page, pageSize);
 
             return formatPageResponse(list, data.length, page, pageSize);

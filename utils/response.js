@@ -4,7 +4,7 @@
  * @param data{any} 响应数据
  * @param msg{string} 响应消息
  */
-function formatResponse(status, data, msg) {
+function formatResponse(status, data = null, msg) {
     return {
         status,
         data,
@@ -30,10 +30,6 @@ class ServiceError extends Error {
     constructor(message, status) {
         super(message);
         this.status = status;
-    }
-
-    // 返回格式化错误信息
-    toResponseJSON() {
         return formatResponse(this.status, null, this.message);
     }
 }
