@@ -50,22 +50,27 @@ let logger = {};
 
 // 自定义输出格式，确定哪些内容输出到日志文件中
 const formatError = (ctx, err) => {
-    const {method, url} = ctx
-    let body = ctx.request.body
-    const user = ctx.state.user
+    const {
+        ip,
+        method,
+        url,
+        response: {status, message, body: responseBody},
+        request: {body, header: {authorization}}
+    } = ctx;
 
-    // 将请求方法，请求路径，请求体，登录用户，错误信息
-    return {method, url, body, user, err}
+    return {ip, method, url, body, authorization, response: {status, body: responseBody, message}, err};
 };
 
 const formatRes = (ctx, costTime) => {
-    // const { method, url, response: { status, message, body: { success } }, request: { header: { authorization } } } = ctx
-    const {ip, method, url, response: {status, message}, request: {header: {authorization}}} = ctx
-    let body = ctx.request.body
-    const user = ctx.state.user
+    const {
+        ip,
+        method,
+        url,
+        response: {status, message, body: responseBody},
+        request: {body, header: {authorization}}
+    } = ctx;
 
-    // 将请求方法，请求路径，请求体，登录用户，请求消耗时间，请求头中的authorization字段即token，响应体中的状态码，消息，以及自定义的响应状态
-    return {ip, method, url, body, user, costTime, authorization, response: {status, message}}
+    return {ip, method, url, body, costTime, authorization, response: {status, body: responseBody, message}};
 };
 
 // 生成一个error类型的日志记录器
@@ -80,14 +85,15 @@ let console = log4js.getLogger();
 // 封装错误日志
 logger.errLogger = (ctx, error) => {
     if (ctx && error) {
-        errorLogger.error(formatError(ctx, error))
+        errorLogger.error(formatError(ctx, error));
     }
 };
 
 // 封装响应日志
 logger.resLogger = (ctx, resTime) => {
+    window.console.log("123")
     if (ctx) {
-        resLogger.info(formatRes(ctx, resTime))
+        resLogger.info(formatRes(ctx, resTime));
     }
 };
 

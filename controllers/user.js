@@ -1,20 +1,15 @@
 const userService = require("../services/userService");
-const {successResponse, UnknownError, ForbiddenError} = require("../utils/response");
+const {successResponse, UnknownError, ValidationError} = require("../utils/response");
 const svgCaptcha = require('svg-captcha');
-const jwt = require("jsonwebtoken");
-const Redis = require('ioredis');
-const {makeToken} = require("../utils/token");
-
-// 创建 Redis 客户端实例, 连接指定的 Redis 服务器
-const redis = new Redis({
-    port: 6379,
-    host: '127.0.0.1'
-});
-
-// 密钥
-const secretKey = process.env.SECRET_KEY;
+const {makeToken, verifyToken, decodeToken} = require("../utils/token");
+const redis = require("../utils/redis");
 
 const user = {
+    /**
+     * 获取图形验证码
+     * @example /api/user/captcha
+     * @return {string} {base64Img, captchaKey} - base64格式的图片和验证码对于的key
+     */
     async getCaptcha(ctx) {
         const captcha = svgCaptcha.create({
             size: 4, // 验证码长度
@@ -29,18 +24,22 @@ const user = {
 
         const captchaKey = `captcha:${Date.now()}`;
 
-        ctx.set("Captcha-Key", captchaKey);
-
         await redis.set(captchaKey, captcha.text.toLowerCase());
 
-        console.log(captcha.text, 'captcha.text');
+        console.log('captchaKey:', captchaKey, 'captchaValue:', captcha.text.toLowerCase());
 
         let img = new Buffer.from(captcha.data).toString("base64");
 
         let base64Img = "data:image/svg+xml;base64," + img;
 
-        ctx.body = successResponse(base64Img);
+        ctx.body = successResponse({base64Img, captchaKey});
     },
+    /**
+     * 获取手机登录验证码
+     * @example /api/user/verificationCode?phone=15614410020
+     * @param {string} phone - 手机号
+     * @return {string} code - 代替真正的验证码
+     */
     async getVerificationCode(ctx) {
         const {phone} = ctx.request.query;
 
@@ -57,6 +56,39 @@ const user = {
 
         ctx.body = successResponse(code, "发送成功");
     },
+    /**
+     * 登录
+     * @example /api/user/login
+     * @param {string} phone - 手机号
+     * @param {string} code - 短信验证码
+     * @param {string} account - 账号
+     * @param {string} password - 密码
+     * @param {string} captcha - 图形验证码
+     * @return {object} {userInfo, token} - 用户信息和 token
+     */
+    async login(ctx) {
+        const {phone, code, account, password, captcha} = ctx.request.body;
+
+        if(phone && code) {
+            await this.loginByCode(ctx);
+        } else if(account && password && captcha) {
+            await this.loginByPassword(ctx);
+        } else {
+            ctx.body = new ValidationError("登录参数缺失");
+        }
+    },
+    /**
+     * 手机验证码登录
+     * @example
+     * /api/user/loginByCode
+     * {
+     *     "phone": "15614410020",
+     *     "code": "ABCD"
+     * }
+     * @param {string} phone - 手机号
+     * @param {string} code - 验证码
+     * @return {object} {userInfo, token} - 用户信息和 token
+     */
     async loginByCode(ctx) {
         const {phone, code} = ctx.request.body;
 
@@ -69,6 +101,11 @@ const user = {
 
         const codeInRedis = await redis.get(codeKey);
 
+        if(!codeInRedis) {
+            ctx.body = new UnknownError("验证码已过期，请重新获取验证码");
+            return;
+        }
+
         if (!code || codeInRedis !== code) {
             ctx.body = new UnknownError("验证码错误");
             return;
@@ -76,8 +113,15 @@ const user = {
 
         await redis.del(codeKey);
 
-        const result = await userService.getUserInfoByPhone(phone);
+        let result = await userService.getUserInfoByPhone(phone);
 
+        // 未注册用户，自动创建新用户
+        if(!result) {
+            await userService.registerUserByPhone(phone);
+            result = await userService.getUserInfoByPhone(phone);
+        }
+
+        // 极端情况，未注册用户，创建新用户时失败了
         if (!result) {
             ctx.body = new UnknownError("未查到该用户之后，创建用户失败");
             return;
@@ -85,10 +129,26 @@ const user = {
 
         const token = makeToken(result);
 
-        ctx.set("Token", token);
-
-        ctx.body = successResponse(result, "登录成功");
+        ctx.body = successResponse({userInfo: result, token}, "登录成功");
     },
+    /**
+     * 密码登录
+     * @example
+     * /api/user/loginByPassword
+     * {
+     *     "account": "zhubo",
+     *     "password": "123456",
+     *     "captcha": "iust"
+     * }
+     * header: {
+     *     "captcha-key": "captcha:123213434324"
+     * }
+     * @param {string} account - 账号
+     * @param {string} password - 密码
+     * @param {string} captcha - 图形验证码
+     * @param {string} "captcha-key" - 携带在请求头里面的图形验证码的 key
+     * @return {object} {userInfo, token} - 用户信息和 token
+     */
     async loginByPassword(ctx) {
         let {account, password, captcha} = ctx.request.body;
 
@@ -99,7 +159,7 @@ const user = {
             return;
         }
 
-        const captchaKey = ctx.headers["captcha-key"];
+        const captchaKey = ctx.request.header["captcha-key"];
 
         const captchaInRedis = await redis.get(captchaKey);
 
@@ -119,9 +179,40 @@ const user = {
 
         const token = makeToken(result);
 
-        ctx.set("Token", token);
+        ctx.body = successResponse({userInfo: result, token}, "登录成功");
+    },
+    /**
+     * 判断是否登录
+     * @example
+     * /api/user/isLogin
+     * Header: {
+     *     Authorization: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+     * }
+     * @param {string} authorization - 请求头中的 authorization（token）
+     * @return {boolean} state - 是否登录
+     */
+    async getIsLogin(ctx) {
+        const token = ctx.get("authorization");
 
-        ctx.body = successResponse(result, "登录成功");
+        if(!token || !verifyToken(token)) {
+            ctx.body = successResponse(false);
+            return;
+        }
+
+        ctx.body = successResponse(true);
+    },
+    async logout(ctx) {
+        const token = ctx.get("authorization");
+
+        if(verifyToken(token)) {
+            const {userInfo, tokenInRedis} = decodeToken(token);
+            const redisKey = `token:${userInfo.user_id}`;
+
+            if(await redis.get(redisKey) === tokenInRedis) {
+                await redis.del(redisKey);
+            }
+        }
+        ctx.body = successResponse(null, "退出登录成功！");
     }
 };
 

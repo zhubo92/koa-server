@@ -5,16 +5,21 @@ const bodyParser = require("koa-bodyparser");
 const koaStatic = require("koa-static");
 const cors = require('koa2-cors');
 const KoaLogger = require("koa-logger");
-const log4js = require('log4js');
 const dotenv = require('dotenv').config();
-const router = require("./routes/index");
-const {UnknownError, ForbiddenError} = require("./utils/response");
+const router = require("./router/index");
 const { isProd } = require('./utils/index');
 const { log, errLogger, resLogger } = require('./utils/log4js');
 const tokenMiddleware = require("./middleware/tokenMiddleware");
 
 const PORT = process.env.SERVER_PORT;
 const app = new Koa();
+
+
+// 解析中间件
+app.use(bodyParser({
+    enableTypes: ['json', 'form', 'text'],
+    multipart: true,
+}));
 
 // 控制台打印请求日志
 app.use(KoaLogger());
@@ -48,26 +53,13 @@ app.on('error', (err, ctx) => {
 app.use(cors());
 
 // 静态资源加载
-app.use(convert(koaStatic(
-    path.join(__dirname, './static')
-)));
-
-// 解析中间件
-app.use(bodyParser({
-    enableTypes: ['json', 'form', 'text'],
-    multipart: true,
-}));
+app.use(convert(koaStatic(path.join(__dirname, './static'))));
 
 // 应用 token 校验中间件
 app.use(tokenMiddleware);
 
 // 注册路由中间件，处理响应状态码
 app.use(router.routes()).use(router.allowedMethods());
-
-// 全局监听异常信息
-app.on('error', err => {
-    console.error('server error:', err)
-});
 
 // 启动服务器
 app.listen(PORT, () => {

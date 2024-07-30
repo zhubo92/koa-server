@@ -6,18 +6,12 @@ const secretKey = process.env.SECRET_KEY;
 
 // 创建一个中间件来校验 token
 async function tokenMiddleware(ctx, next) {
-    const token = ctx.get("token");
-    const {url} = ctx.request;
+    console.log(ctx.response.status,'ctx.response.status')
+    if(ctx.response.status === 200) {
+        const token = ctx.get("authorization");
+        const {url} = ctx.request;
 
-    if (!url.startsWith("/api/user")) {
-        if(!token) {
-            ctx.body = new ForbiddenError("token 已过期，请重新登录");
-            return;
-        }
-
-        const result = verifyToken(token);
-
-        if(!result) {
+        if (!url.startsWith("/api/user") && (!token || !verifyToken(token))) {
             ctx.body = new ForbiddenError("token 已过期，请重新登录");
             return;
         }

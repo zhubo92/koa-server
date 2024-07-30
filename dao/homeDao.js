@@ -1,4 +1,4 @@
-const {dbQuery} = require("../db");
+const {dbQuery} = require("../utils/db");
 
 const homeDao = {
     async querySlidesData() {
