@@ -4,7 +4,7 @@
  * @param data{any} 响应数据
  * @param msg{string} 响应消息
  */
-function formatResponse(status, data = null, msg) {
+function formatResponse(status, data, msg) {
     return {
         status,
         data,
@@ -15,7 +15,7 @@ function formatResponse(status, data = null, msg) {
 /**
  * 请求成功
  */
-function successResponse(data, msg = '成功') {
+function successResponse(data = null, msg = '成功') {
     return formatResponse(200, data, msg);
 }
 

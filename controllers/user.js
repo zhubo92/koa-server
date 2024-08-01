@@ -1,7 +1,7 @@
 const userService = require("../services/userService");
 const {successResponse, UnknownError, ValidationError} = require("../utils/response");
 const svgCaptcha = require('svg-captcha');
-const {makeToken, verifyToken, decodeToken} = require("../utils/token");
+const {createToken, verifyToken, decodeToken} = require("../utils/token");
 const redis = require("../utils/redis");
 
 const user = {
@@ -127,7 +127,7 @@ const user = {
             return;
         }
 
-        const token = makeToken(result);
+        const token = createToken(result);
 
         ctx.body = successResponse({userInfo: result, token}, "登录成功");
     },
@@ -177,7 +177,7 @@ const user = {
             return;
         }
 
-        const token = makeToken(result);
+        const token = createToken(result);
 
         ctx.body = successResponse({userInfo: result, token}, "登录成功");
     },

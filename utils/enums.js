@@ -3,7 +3,6 @@ const isPageEnum = {
     PAGINATION: 1
 };
 
-
 module.exports = {
     isPageEnum
 }

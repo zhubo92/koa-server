@@ -1,6 +1,6 @@
 const path = require('path');
 const log4js = require('log4js');
-const {isProd} = require('./index');
+const {isProd} = require('./tools');
 
 // 日志配置对象
 log4js.configure({
@@ -91,7 +91,6 @@ logger.errLogger = (ctx, error) => {
 
 // 封装响应日志
 logger.resLogger = (ctx, resTime) => {
-    window.console.log("123")
     if (ctx) {
         resLogger.info(formatRes(ctx, resTime));
     }

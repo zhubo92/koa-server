@@ -7,8 +7,8 @@ const cors = require('koa2-cors');
 const KoaLogger = require("koa-logger");
 const dotenv = require('dotenv').config();
 const router = require("./router/index");
-const { isProd } = require('./utils/index');
-const { log, errLogger, resLogger } = require('./utils/log4js');
+const {isProd} = require('./utils/tools');
+const {log, errLogger, resLogger} = require('./utils/log4js');
 const tokenMiddleware = require("./middleware/tokenMiddleware");
 
 const PORT = process.env.SERVER_PORT;
