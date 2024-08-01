@@ -70,9 +70,9 @@ const user = {
         const {phone, code, account, password, captcha} = ctx.request.body;
 
         if(phone && code) {
-            await this.loginByCode(ctx);
+            await user.loginByCode(ctx);
         } else if(account && password && captcha) {
-            await this.loginByPassword(ctx);
+            await user.loginByPassword(ctx);
         } else {
             ctx.body = new ValidationError("登录参数缺失");
         }
