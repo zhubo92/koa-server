@@ -11,7 +11,7 @@ async function tokenMiddleware(ctx, next) {
         const {url} = ctx.request;
 
         if (!url.startsWith("/api/user") && (!token || !verifyToken(token))) {
-            ctx.body = new ForbiddenError("token 已过期，请重新登录");
+            ctx.body = new ForbiddenError();
             return;
         }
     }

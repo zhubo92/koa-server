@@ -8,4 +8,23 @@ const redis = new Redis({
     port: REDIS_PORT
 });
 
-module.exports = redis;
+// 获取
+async function getRedis(key) {
+    return await redis.get(key);
+}
+
+// 设置
+async function setRedis(key, value) {
+    await redis.set(key, value);
+}
+
+// 删除
+async function delRedis(key) {
+    await redis.del(key);
+}
+
+module.exports = {
+    getRedis,
+    setRedis,
+    delRedis
+};

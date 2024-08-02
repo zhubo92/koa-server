@@ -1,8 +1,8 @@
 const userService = require("../services/userService");
-const {successResponse, UnknownError, ValidationError} = require("../utils/response");
+const {successResponse, UnknownError, ValidationError, ForbiddenError} = require("../utils/response");
 const svgCaptcha = require('svg-captcha');
 const {createToken, verifyToken, decodeToken} = require("../utils/token");
-const redis = require("../utils/redis");
+const {setRedis, getRedis, delRedis} = require("../utils/redis");
 
 const user = {
     /**
@@ -24,12 +24,9 @@ const user = {
 
         const captchaKey = `captcha:${Date.now()}`;
 
-        await redis.set(captchaKey, captcha.text.toLowerCase());
-
-        console.log('captchaKey:', captchaKey, 'captchaValue:', captcha.text.toLowerCase());
+        await setRedis(captchaKey, captcha.text.toLowerCase());
 
         let img = new Buffer.from(captcha.data).toString("base64");
-
         let base64Img = "data:image/svg+xml;base64," + img;
 
         ctx.body = successResponse({base64Img, captchaKey});
@@ -49,10 +46,9 @@ const user = {
         }
 
         const code = Math.random().toFixed(6).slice(-6);
-
         const codeKey = `code:${phone}`;
 
-        await redis.set(codeKey, code);
+        await setRedis(codeKey, code);
 
         ctx.body = successResponse(code, "发送成功");
     },
@@ -98,8 +94,7 @@ const user = {
         }
 
         const codeKey = `code:${phone}`;
-
-        const codeInRedis = await redis.get(codeKey);
+        const codeInRedis = await getRedis(codeKey);
 
         if(!codeInRedis) {
             ctx.body = new UnknownError("验证码已过期，请重新获取验证码");
@@ -111,7 +106,7 @@ const user = {
             return;
         }
 
-        await redis.del(codeKey);
+        await delRedis(codeKey);
 
         let result = await userService.getUserInfoByPhone(phone);
 
@@ -160,15 +155,14 @@ const user = {
         }
 
         const captchaKey = ctx.request.header["captcha-key"];
-
-        const captchaInRedis = await redis.get(captchaKey);
+        const captchaInRedis = await getRedis(captchaKey);
 
         if (!captcha || captcha !== captchaInRedis) {
             ctx.body = new UnknownError("验证码错误");
             return;
         }
 
-        await redis.del(captchaKey);
+        await delRedis(captchaKey);
 
         const result = await userService.getUserInfoByAccountAndPassword(account, password);
 
@@ -194,25 +188,87 @@ const user = {
     async getIsLogin(ctx) {
         const token = ctx.get("authorization");
 
-        if(!token || !verifyToken(token)) {
+        if(!token || !await verifyToken(token)) {
             ctx.body = successResponse(false);
             return;
         }
 
         ctx.body = successResponse(true);
     },
+    /**
+     * 退出登录
+     * @example
+     * /api/user/logout
+     * Header: {
+     *     Authorization: "HFFJKHFJFHFJFHFJHH"
+     * }
+     */
     async logout(ctx) {
         const token = ctx.get("authorization");
 
-        if(verifyToken(token)) {
-            const {userInfo, tokenInRedis} = decodeToken(token);
-            const redisKey = `token:${userInfo.user_id}`;
+        if(await verifyToken(token)) {
+            const {userInfo, tokenCreateTime} = decodeToken(token);
 
-            if(await redis.get(redisKey) === tokenInRedis) {
-                await redis.del(redisKey);
-            }
+            const redisKey = `token:${userInfo.user_id}`;
+            const queue = await getRedis(redisKey).split(",");
+            const newQueue = queue.filter(item => item !== tokenCreateTime.toString());
+
+            await setRedis(redisKey, newQueue.toString());
         }
+
         ctx.body = successResponse(null, "退出登录成功！");
+    },
+    /**
+     * 更新用户信息
+     * @example /api/user/info
+     * @param {object} newUserInfo - 新用户信息
+     * @return {object} newUserInfo - 新用户信息
+     */
+    async updateUserInfo(ctx) {
+        const token = ctx.get("authorization");
+        const newUserInfo = ctx.request.body;
+
+        if(!await verifyToken(token)) {
+            ctx.body = new ForbiddenError();
+            return;
+        }
+
+        const result = await userService.updateUserInfo(newUserInfo);
+
+        ctx.body = successResponse(result, "更新用户信息成功！");
+    },
+    /**
+     * 修改密码
+     * @example /api/user/password
+     * @param {object} oldPassword - 旧密码
+     * @param {object} newPassword - 新密码
+     */
+    async updateUserPassword(ctx) {
+        const token = ctx.get("authorization");
+        const {new_password, old_password} = ctx.request.body;
+
+        if(!await verifyToken(token)) {
+            ctx.body = new ForbiddenError();
+            return;
+        }
+
+        const {userInfo: {user_id}} = decodeToken(token);
+
+        const result = await userService.getUserInfoById(user_id);
+
+        if(!result) {
+            ctx.body = new ForbiddenError("未查到该用户，请重新登录！");
+            return;
+        }
+
+        if(result.user_pwd === old_password) {
+            ctx.body = new ValidationError("旧密码不正确！");
+            return;
+        }
+
+        await userService.updatePassword({user_id, new_password});
+
+        ctx.body = successResponse(null, "密码修改成功！");
     }
 };
 

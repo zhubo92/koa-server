@@ -56,7 +56,7 @@ class UploadError extends ServiceError {
  * 禁止访问错误
  */
 class ForbiddenError extends ServiceError {
-    constructor(message = "无权限访问，请重新登录") {
+    constructor(message = "token 已过期，请重新登录") {
         super(message, 401);
     }
 }

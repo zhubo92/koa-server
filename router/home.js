@@ -18,5 +18,14 @@ router.get("/category", home.getCategory);
 // 推荐页商品
 router.get("/recommend", home.getRecommend);
 
+// 获取购物车商品数据
+router.get("/shoppingCart", home.getShoppingCart);
+
+// 商品添加到购物车或更改商品数量
+router.post("/shoppingCart", home.updateShoppingCart);
+
+// 删除购物车数据
+router.del("/shoppingCart", home.deleteShoppingCart);
+
 
 module.exports = router;

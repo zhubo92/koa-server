@@ -1,8 +1,11 @@
 const jwt = require("jsonwebtoken");
-const redis = require("../utils/redis");
+const {getRedis, setRedis} = require("./redis");
 
 /**
- * 说明：本系统的 token 由 jwt 和 redis 搭配验证，
+ * 说明：
+ * 本系统的 token 由 jwt 和 redis 搭配验证。
+ * token 有效的同时，redis存储的队列中也得有这个 token 生成时的时间戳，这样才是真正的未过期 token。
+ * 这样做的目的是为了主动过期某些 token，也是为了便于退出登录。
  */
 
 
@@ -11,6 +14,9 @@ const secretKey = process.env.SECRET_KEY;
 
 // 表示 Token 有效期  不带单位默认为秒  如带单位如: "2 days", "10h", "7d"
 const expiresIn = process.env.TOKEN_EXPIRES_IN;
+
+// token 最多登录几台设备
+const maxNumber = process.env.TOKEN_MAX_NUMBER;
 
 /**
  * 生成 token
@@ -23,7 +29,7 @@ function createToken(userInfo) {
     async function saveInRedis() {
         const redisKey = `token:${userInfo.user_id}`;
 
-        let queueInRedis = await redis.get(redisKey);
+        let queueInRedis = await getRedis(redisKey);
 
         if(!queueInRedis) {
             queueInRedis = "";
@@ -31,7 +37,7 @@ function createToken(userInfo) {
 
         const newQueueInRedis = [tokenCreateTime, ...queueInRedis.split(",")];
 
-        await redis.set(redisKey, newQueueInRedis.slice(0, 5).toString());
+        await setRedis(redisKey, newQueueInRedis.slice(0, maxNumber).toString());
     }
 
     saveInRedis();
@@ -43,22 +49,27 @@ function createToken(userInfo) {
 }
 
 // 验证 token
-function verifyToken(token) {
+async function verifyToken(token) {
     try {
-        const jwtState = jwt.verify(token, secretKey);
 
-        if(!jwtState) return false;
+        jwt.verify(token, secretKey);
 
         const {userInfo, tokenCreateTime} = decodeToken(token);
 
         const redisKey = `token:${userInfo.user_id}`;
 
-        const currentTokenInRedis = redis.get(redisKey);
+        const currentTokenInRedis = await getRedis(redisKey);
 
-        return currentTokenInRedis === tokenCreateTime;
-    } catch (e) {
+        console.log(currentTokenInRedis, 'currentTokenInRedis', tokenCreateTime)
+
+        return !!currentTokenInRedis.split(",").find(item => item === tokenCreateTime.toString());
+
+    } catch (e) { // 一般都是 token 过期了
+
         console.log(e, 'verifyToken.error');
+
         return false;
+
     }
 }
 

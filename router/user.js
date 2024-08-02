@@ -24,5 +24,11 @@ router.get("/isLogin", user.getIsLogin);
 // 退出登录
 router.post("/logout", user.logout);
 
+// 更新用户信息
+router.put("/info", user.updateUserInfo);
+
+// 修改密码
+router.put("/password", user.updateUserPassword);
+
 
 module.exports = router;

@@ -14,7 +14,6 @@ const tokenMiddleware = require("./middleware/tokenMiddleware");
 const PORT = process.env.SERVER_PORT;
 const app = new Koa();
 
-
 // 解析中间件
 app.use(bodyParser({
     enableTypes: ['json', 'form', 'text'],

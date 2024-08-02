@@ -21,6 +21,17 @@ const userService = {
         return result.length > 0 ? result[0] : null;
     },
     /**
+     * 通过用户id获取用户信息
+     * @example userService.getUserInfoById(id)
+     * @param {string} id - 用户id
+     * @return {object|null} userInfo - 用户信息
+     */
+    async getUserInfoById(id) {
+        const result = await userDao.queryUserInfoDataById(id);
+
+        return result.length > 0 ? result[0] : null;
+    },
+    /**
      * 通过账号密码获取用户信息
      * @example userService.getUserInfoByAccountAndPassword(account, password)
      * @param {string} account - 账号
@@ -35,6 +46,25 @@ const userService = {
         }
 
         return result[0];
+    },
+    /**
+     * 更新用户信息
+     * @example userService.updateUserInfo(newUserInfo)
+     * @param {object} newUserInfo - 新用户信息
+     * @return {object} newUserInfo - 新用户信息
+     */
+    async updateUserInfo(newUserInfo) {
+        await userDao.updateUserInfoData(newUserInfo);
+
+        return newUserInfo;
+    },
+    /**
+     * 修改密码
+     * @example userService.updatePassword({user_id, new_password})
+     * @param {object} user_id new_password - 用户id 和 新密码
+     */
+    async updatePassword({user_id, new_password}) {
+        await userDao.updatePasswordData({user_id, new_password});
     }
 };
 
