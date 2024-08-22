@@ -10,7 +10,7 @@ router.get("/slides", home.getSlides);
 router.get("/nav", home.getNav);
 
 // 首页商品
-router.get("/goods", home.getGoods);
+router.get("/product", home.getGoods);
 
 // 搜索页商品分类
 router.get("/category", home.getCategory);
@@ -19,13 +19,13 @@ router.get("/category", home.getCategory);
 router.get("/recommend", home.getRecommend);
 
 // 获取购物车商品数据
-router.get("/shoppingCart", home.getShoppingCart);
+router.get("/cart", home.getShoppingCart);
 
 // 商品添加到购物车或更改商品数量
-router.post("/shoppingCart", home.updateShoppingCart);
+router.post("/cart", home.updateShoppingCart);
 
 // 删除购物车数据
-router.del("/shoppingCart", home.deleteShoppingCart);
+router.del("/cart", home.deleteShoppingCart);
 
 
 module.exports = router;

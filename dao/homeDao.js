@@ -23,19 +23,19 @@ const homeDao = {
         return await dbQuery(`select * from recommend;`);
     },
     async queryShoppingCartDataByGoodsAndUserId(user_id, goods_id) {
-        return await dbQuery(`select * from shopping_cart where user_id=${user_id} and goods_id=${goods_id};`);
+        return await dbQuery(`select * from cart where user_id=${user_id} and goods_id=${goods_id};`);
     },
     async queryShoppingCartDataByUserId(user_id) {
-        return await dbQuery(`select * from shopping_cart where user_id=${user_id};`);
+        return await dbQuery(`select * from cart where user_id=${user_id};`);
     },
     async updateGoodsNumberData(user_id, goods_id, number) {
-        await dbQuery(`update shopping_cart set number=${number} where user_id=${user_id} and goods_id=${goods_id};`);
+        await dbQuery(`update cart set number=${number} where user_id=${user_id} and goods_id=${goods_id};`);
     },
     async insertGoodsInShoppingCart({user_id, goods_id, goods_name, thumb_url, price, number, is_pay}) {
-        await dbQuery(`insert into shopping_cart values(${user_id}, ${goods_id}, '${goods_name}', '${thumb_url}', ${price}, ${number}, ${is_pay});`);
+        await dbQuery(`insert into cart values(${user_id}, ${goods_id}, '${goods_name}', '${thumb_url}', ${price}, ${number}, ${is_pay});`);
     },
     async deleteGoodsInShoppingCart(user_id, goods_id) {
-        await dbQuery(`delete from shopping_cart where user_id=${user_id} and goods_id=${goods_id};`);
+        await dbQuery(`delete from cart where user_id=${user_id} and goods_id=${goods_id};`);
     }
 }
 

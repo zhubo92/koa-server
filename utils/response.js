@@ -1,4 +1,15 @@
 /**
+ * 请求状态码
+ * 200 （成功）服务器已成功处理了请求。
+ * 401（未授权）请求要求身份验证。一旦出现这个状态，需要重新登陆
+ * 403 （无权限）请求的资源不允许访问。比如说，你使用普通用户的 Token 去请求管理员才能访问的资源。
+ * 404（未找到）服务器找不到请求的网页。
+ * 408（请求超时）服务器等候请求时发生超时 。
+ * 500（服务器内部错误）服务器遇到错误，无法完成请求。
+ */
+
+
+/**
  * 格式化要响应的数据
  * @param status{number} 响应状态码
  * @param data{any} 响应数据
@@ -56,7 +67,7 @@ class UploadError extends ServiceError {
  * 禁止访问错误
  */
 class ForbiddenError extends ServiceError {
-    constructor(message = "token 已过期，请重新登录") {
+    constructor(message = "身份验证失败，请重新登录") {
         super(message, 401);
     }
 }

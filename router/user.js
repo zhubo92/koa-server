@@ -7,7 +7,7 @@ const router = new Router();
 router.get("/captcha", user.getCaptcha);
 
 // 获取手机登录验证码
-router.get("/verificationCode", user.getVerificationCode);
+router.get("/code", user.getCode);
 
 // 账号密码图形验证码登录
 router.post("/loginByPassword", user.loginByPassword);

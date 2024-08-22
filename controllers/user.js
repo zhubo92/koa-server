@@ -19,7 +19,7 @@ const user = {
             ignoreChars: "0oO1ilI", // 验证码字符中排除 0o1i
             noise: 2, // 干扰线条的数量
             color: true, // 验证码的字符是否有颜色，默认没有，如果设定了背景，则默认有
-            background: "#eee", // 验证码图片背景颜色
+            background: "#fff", // 验证码图片背景颜色
         });
 
         const captchaKey = `captcha:${Date.now()}`;
@@ -33,11 +33,11 @@ const user = {
     },
     /**
      * 获取手机登录验证码
-     * @example /api/user/verificationCode?phone=15614410020
+     * @example /api/user/code?phone=15614410020
      * @param {string} phone - 手机号
      * @return {string} code - 代替真正的验证码
      */
-    async getVerificationCode(ctx) {
+    async getCode(ctx) {
         const {phone} = ctx.request.query;
 
         if (!phone) {
@@ -136,12 +136,12 @@ const user = {
      *     "captcha": "iust"
      * }
      * header: {
-     *     "captcha-key": "captcha:123213434324"
+     *     "Captcha-Key": "captcha:123213434324"
      * }
      * @param {string} account - 账号
      * @param {string} password - 密码
      * @param {string} captcha - 图形验证码
-     * @param {string} "captcha-key" - 携带在请求头里面的图形验证码的 key
+     * @param {string} "Captcha-Key" - 携带在请求头里面的图形验证码的 key
      * @return {object} {userInfo, token} - 用户信息和 token
      */
     async loginByPassword(ctx) {
@@ -150,7 +150,7 @@ const user = {
         if (captcha) captcha = captcha.toLowerCase();
 
         if (!account) {
-            ctx.body = new UnknownError("请输入账号");
+            ctx.body = new ValidationError("请输入账号");
             return;
         }
 
@@ -158,7 +158,7 @@ const user = {
         const captchaInRedis = await getRedis(captchaKey);
 
         if (!captcha || captcha !== captchaInRedis) {
-            ctx.body = new UnknownError("验证码错误");
+            ctx.body = new ValidationError("验证码错误");
             return;
         }
 
