@@ -52,7 +52,7 @@ app.on('error', (err, ctx) => {
 app.use(cors());
 
 // 静态资源加载
-app.use(convert(koaStatic(path.join(__dirname, './html'))));
+app.use(convert(koaStatic(path.join(__dirname, '../html'))));
 
 // 应用 token 校验中间件
 app.use(tokenMiddleware);
