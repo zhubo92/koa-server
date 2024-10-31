@@ -5,10 +5,7 @@
   "scripts": {
     "server": "node app.js",
     "nodemon": "nodemon app.js",
-    "pm2": "pm2 start app.js --name KoaServer",
-    "pm2-list": "pm2 list",
-    "pm2-monit": "pm2 monit",
-    "pm2-delete": "pm2 delete all"
+    "pm2": "pm2 start app.js --name KoaServer"
   },
   "keywords": [],
   "author": "",
